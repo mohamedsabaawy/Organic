@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
+            $table->text('title');
+            $table->text('title_en');
+            $table->longText('content');
+            $table->longText('content_en');
+            $table->string('photo');
+            $table->string('author');
+            $table->string('author_en');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

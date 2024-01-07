@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('contact_us', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('from');
+            $table->string('content');
+            $table->timestamps();//
+            $table->softDeletes();
         });
     }
 
