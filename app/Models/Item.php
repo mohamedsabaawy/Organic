@@ -23,10 +23,24 @@ class Item extends Model
         'manual',
         'manual_en',
         'production_date',
+        'special',
     ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(Photo::class);
+    }
+
+    public function favorites(){
+        return $this->belongsToMany(Client::class,'favorites');
+    }
+
+    public function invoices(){
+        return $this->belongsToMany(Invoice::class);
     }
 }

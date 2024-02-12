@@ -16,10 +16,11 @@ class CategoryResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'photo'=>$this->photo,
-            'name'=>$this->name,
-            'name_en'=>$this->name_en,
-            'items'=>ItemResource::collection($this->items)
+            'photo'=>asset('photo/'.$this->photo),
+            'name'=>app()->getLocale() == 'ar' ? $this->name : $this->name_en,
+            'items'=>ItemResource::collection($this->items),
+            'created_at'=>date("Y-m-d",strtotime($this->created_at)),
+            'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
         ];
         //return parent::toArray($request);
     }

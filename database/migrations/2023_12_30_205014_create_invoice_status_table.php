@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banner_items', function (Blueprint $table) {
+        Schema::create('invoice_statuses', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('banner_id');
-            $table->bigInteger('item_id');
-            $table->smallInteger('count')->nullable();
-            $table->double('price',10,2)->nullable();
+            $table->bigInteger('invoice_id');
+            $table->enum('status',['pending','underPrepare','onTheWay','delivery'])->default('padding');
+            $table->double('payed_amount',10,2)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('banner_items');
+        Schema::dropIfExists('invoice_statuses');
     }
 };

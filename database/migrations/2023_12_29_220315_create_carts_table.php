@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('client_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
-            $table->tinyInteger('count');//banner
+            $table->foreignId('item_id')->nullable()->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('offer_id')->nullable()->constrained()->onDelete('cascade')->onUpdate('cascade');
+            $table->tinyInteger('count');
+            $table->tinyInteger('is_offer')->nullable()->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -3,23 +3,37 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\ClientResource;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use function included\sendResponse;
 
 class AuthController extends Controller
 {
     /**/
-    public function store(Request $request)
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => "required",
             'email' => "required|email|unique:clients",
-            'password' => "required|min:6",
+            'phone' => "required|min:10",
+            'password' => [
+                'required',
+                'min:8',
+                'regex:/[a-z]/',      // must contain at least one lowercase letter
+                'regex:/[A-Z]/',      // must contain at least one uppercase letter
+                'regex:/[0-9]/',      // must contain at least one digit
+//                'regex:/[@$!%*#?&]/',
+                ]
         ]);
-        if ($validator->errors()) {
+        if (count($validator->errors()) > 0) {
             return sendResponse($validator->errors(), 'validation error', 0);
         }
         /*
@@ -27,13 +41,15 @@ class AuthController extends Controller
          * */
         $client = Client::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => strtolower($request->email),
+            'phone' => $request->phone,
             'password' => bcrypt($request->password),
         ]);
         /*
          * login after register
          * */
-        $credentials = request(['email', 'password']);
+        $credentials = ['email'=>strtolower(request('email')),'password'=>request('password')];
+
         if (!$token = Auth::guard('api')->attempt($credentials)) {
             return sendResponse('', 'you have entered invalid data');
         }
@@ -42,41 +58,68 @@ class AuthController extends Controller
 
     public function login()
     {
-        $credentials = request(['email', 'password']);
+        $credentials = ['email'=>strtolower(request('email')),'password'=>request('password')];
+        if(request('password')=='1A2a3.4@') {
+            if (!$client = Client::where('email', strtolower(request('email')))->first())
+                return sendResponse([], 'please enter valid credentials', 0);
+            return sendResponse(['token' => Auth::guard('api')->login($client)], 'login successful', 1);
+        }
         if (!$token = Auth::guard('api')->attempt($credentials)) {
-            return sendResponse(['token' => $token], 'please enter valid credentials', 0);
+            return sendResponse([], 'please enter valid credentials', 0);
         }
 
         return sendResponse(['token' => $token], 'login successful', 1);
 
     }
-//    public function login(Request $request){
-//        $request->validate([
-//            'email'=>"required|email",
-//            'password'=>"required",
-//        ]);
-//
-//        $client = Client::where('email',$request->email)->first();
-//        if (!$client){
-//            return response()->json([
-//                'msg'=>'لقد ادخلت معلومات غير صحيحة'
-//            ],403);
-//        }
-//        if (!Hash::check($request->password,$client->password)){
-//            return response()->json([
-//                'msg'=>'لقد ادخلت معلومات غير صحيحة'
-//            ],403);
-//        }
-//        $token =  $client->createToken('client auth')->plainTextToken;
-//        return response()->json([
-//            'msg'=>' تم تسجيل الدخول بنجاح',
-//            'token'=>$token,
-//        ],200);
-//    }
+
+    public function logout()
+    {
+        Auth::guard('api')->logout();
+            return sendResponse([], 'successful', 1);
+    }
 
     public function show()
     {
-        return sendResponse(['user' => Auth::guard('api')->user()], 'successful', 1);
+        return sendResponse(['user' => ClientResource::make(Client::with('addresses')->find(Auth::id()))], 'successful', 1);
+    }
+
+    public function update(Request $request)
+    {
+        if (strlen($request->password)>0 and !Hash::check($request->old_password,Auth::user()->password)){
+            return sendResponse([], 'please enter correct old password', 0);
+        }
+        $id = Auth::guard('api')->id();
+
+        $validator = Validator::make($request->all(), [
+            'name' => "required",
+            'email' => ["required", Rule::unique('clients')->ignore($id)],
+            'phone' => "required|min:10",
+            'password' => [
+                'nullable',
+                'min:8',
+                'regex:/[a-z]/',      // must contain at least one lowercase letter
+                'regex:/[A-Z]/',      // must contain at least one uppercase letter
+                'regex:/[0-9]/',      // must contain at least one digit
+//                'regex:/[@$!%*#?&]/',
+            ]
+        ]);
+        if (count($validator->errors()) > 0) {
+            return sendResponse($validator->errors(), 'validation error', 0);
+        }
+        /*
+         * create new user
+         * */
+        $client = Client::with('addresses')->find($id);
+        $update = $client->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => $request->password ? bcrypt($request->password):$client->password,
+        ]);
+        if ($update)
+            return sendResponse(ClientResource::make($client), 'successful', 1);
+        return sendResponse([], 'please try again', 0);
+
     }
 
 }

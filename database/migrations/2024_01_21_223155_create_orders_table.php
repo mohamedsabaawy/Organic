@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoice_items', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('item_id');
-            $table->bigInteger('invoice_id');
-            $table->tinyInteger('count');
-            $table->double('price',10,2);
+            $table->enum('payment_type',['cash','visa']);
+            $table->enum('status',['padding','underPrepare','onTheWay','delivery'])->default('padding');
+
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('invoice_items');
+        Schema::dropIfExists('orders');
     }
 };

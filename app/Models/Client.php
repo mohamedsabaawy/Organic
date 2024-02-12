@@ -16,7 +16,7 @@ class Client extends Authenticatable implements JWTSubject
     use  HasApiTokens, HasFactory, Notifiable,SoftDeletes;
 
     protected $fillable =[
-        'name','email','phone','password'
+        'name','email','phone','password','lang','role'
     ];
     protected $hidden=['password'];
 
@@ -30,5 +30,27 @@ class Client extends Authenticatable implements JWTSubject
     {
         return [];
         // TODO: Implement getJWTCustomClaims() method.
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    public function favorites(){
+        return $this->belongsToMany(Item::class,'favorites');
+    }
+
+    public function offerFavorites(){
+        return $this->belongsToMany(Offer::class,'favorites');
+    }
+
+    public function invoices(){
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
     }
 }

@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_statuses', function (Blueprint $table) {
+        Schema::create('client_item', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('invoice_id');
-            $table->enum('status',['padding','underPrepare','onTheWay','delivery']);
-            $table->double('payed_amount',10,2)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('order_statuses');
+        Schema::dropIfExists('client_item');
     }
 };

@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\CartResource;
 use App\Models\Cart;
+use App\Models\Item;
+use App\Models\Offer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use function included\sendResponse;
 
 class CartController extends Controller
 {
@@ -16,14 +21,19 @@ class CartController extends Controller
 
     public function index()
     {
-        $total=0;
-        $cart = CartResource::collection(Cart::with('item')->where('client_id',Auth::guard('api')->id())->get());
-        foreach ($cart as $item){
-            $total += $item->item->price * $item->count;
+        $total = 0;
+        $cart = CartResource::collection(Cart::with(['item', 'offer'])->where('client_id', Auth::guard('api')->id())->get());
+        if (!count($cart)>0)
+            return sendResponse([],'no data found',0);
+        foreach ($cart as $item) {
+            if ($item->offer_id) {
+                $total += $item->offer->price * $item->count;
+            } else
+                $total += $item->item->price * $item->count;
         }
         return response()->json([
-            "items"=> CartResource::collection($cart),
-            "total_price"=>$total
+            "items" => CartResource::collection($cart),//favorites
+            "total_price" => $total
         ]);
     }
 
@@ -32,12 +42,31 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
-            $cart = Cart::create([
-                'client_id'=>Auth::guard('api')->id(),
-                'item_id'=>$request->item_id,
-                'count'=>$request->count,
-            ]);
-        return response()->json(CartResource::collection($cart = Cart::with('item')->where('client_id',Auth::guard('api')->id())->get()));
+        $validator = Validator::make($request->all(), [
+            'item_id' => ['nullable', Rule::in(Item::all()->pluck('id'))],
+            'offer_id' => ['nullable', Rule::in(Offer::all()->pluck('id'))],
+            'count' => 'required|numeric|min:1',
+        ]);
+        if (count($validator->errors()) > 0)
+            return sendResponse($validator->errors(), 'validation error', 0);
+
+
+
+        $cart = Cart::where('client_id','=', Auth::guard('api')->id())->get();
+
+        if ($request->item_id & count($cart->where('item_id',$request->item_id))>0)
+            return sendResponse([], 'you try to add same item to the cart',0);
+        if ($request->offer_id & count($cart->where('offer_id',$request->offer_id))>0)
+            return sendResponse([], 'you try to add same offer to the cart',0);
+
+        $cart = Cart::create([
+            'client_id' => Auth::guard('api')->id(),
+            'item_id' => $request->item_id ?? null,
+            'offer_id' => $request->offer_id ?? null,
+            'is_offer' => $request->offer_id ? 1 : 0,
+            'count' => $request->count,
+        ]);
+        return response()->json(CartResource::collection($cart = Cart::with(['item', 'offer'])->where('client_id', Auth::guard('api')->id())->get()));
     }
 
     /**
@@ -61,7 +90,7 @@ class CartController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        return request()->all();
     }
 
     /**
@@ -69,6 +98,10 @@ class CartController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        if ($cart = Cart::find($id)) {
+            $cart->delete();
+            return sendResponse([], 'successful', 1);
+        }
+        return sendResponse([], 'not found', 0);
     }
 }

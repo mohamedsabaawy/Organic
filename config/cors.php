@@ -13,9 +13,11 @@ return [
     |
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
+    | 'sanctum/csrf-cookie'
+    | 'http://127.0.0.1:*','http://127.0.0.1/*','http://127.0.0.1',
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', '*'],
 
     'allowed_methods' => ['*'],
 

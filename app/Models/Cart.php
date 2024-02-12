@@ -8,16 +8,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cart extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory;//SoftDeletes;
     protected $fillable=[
         'client_id',
         'item_id',
         'count',
+        'offer_id',
+        'is_offer',
     ];
 
 
     public function item(){
         return $this->belongsTo(Item::class);
+    }
+
+    public function offer(){
+        return $this->belongsTo(Offer::class);
     }
 
 }

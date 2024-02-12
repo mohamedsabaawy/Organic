@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->double('price',10,2);
-            $table->enum('payment_type',['cash','visa']);
+            $table->foreignId('client_id')->constrained('clients');
+            $table->foreignId('address_id')->constrained('addresses');
+            $table->double('price',10,2)->nullable();
+            $table->enum('payment_type',['cash','visa'])->nullable();
+            $table->enum('status',['pending','underPrepare','onTheWay','delivery'])->default('padding');
             $table->integer('payment_code')->nullable();
             $table->double('amount',10,2)->nullable();
             $table->timestamps();

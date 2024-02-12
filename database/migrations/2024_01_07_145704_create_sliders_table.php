@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('banars', function (Blueprint $table) {
+        Schema::create('sliders', function (Blueprint $table) {
             $table->id();
-            $table->string('photo');
-            $table->date('from');
-            $table->date('to');
-            $table->enum('available',['active','close'])->default('active');
-            $table->double('price',10,2);
+            $table->string('photo');//special
+            $table->string('title');//special
+            $table->enum('status',['active','non active'])->default('active');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('banars');
+        Schema::dropIfExists('sliders');
     }
 };

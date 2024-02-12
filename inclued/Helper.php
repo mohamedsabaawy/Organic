@@ -1,6 +1,8 @@
 <?php
 namespace included;
-function sendResponse( $data, $message, $status = 200 ) {
+use Illuminate\Support\Facades\Validator;
+
+function sendResponse($data, $message, $status = 200 ) {
     $response = [
         'status' => $status,
         'message' => $message,
@@ -19,4 +21,13 @@ function sendError( $errorData, $message, $status = 500 ) {
     }
 
     return response()->json( $response, $status );
+}
+
+function customValidation(array $data,array $role){
+
+    $validator = Validator::make($data,$role);
+    if (count($validator->errors()) > 0) {
+        return sendResponse($validator->errors(), 'validation error', 0);
+    }
+
 }

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->enum('available',['active','nonActive'])->default('active');
             $table->double('price',10,2);
             $table->double('discount',10,2);
+            $table->boolean('special')->nullable();
             $table->foreignId('category_id')->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
