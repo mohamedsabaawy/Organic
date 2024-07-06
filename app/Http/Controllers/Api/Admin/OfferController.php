@@ -61,9 +61,10 @@ class OfferController extends Controller
         $validator = Validator::make($request->all(), [
             'icon' => 'required|image',
             'from' => 'required|date',
-            'to' => 'required',
+            'to' => 'required|date|after_or_equal:from',
             'available' => 'required|in:active,close',
-            'price' => 'required',
+            'price' => 'required|numeric|min:1',
+            'price_dollar' => 'required|numeric|min:1',
         ]);
 
         if (count($validator->errors()) > 0) {
@@ -75,6 +76,7 @@ class OfferController extends Controller
             'from' => date("Y-m-d", strtotime($request->from)),
             'available' => $request->available,
             'price' => $request->price,
+            'price_dollar' => $request->price_dollar,
             'icon' => $request->icon->store('offers', 'public'),
         ]);
 
@@ -92,6 +94,7 @@ class OfferController extends Controller
             'to' => $offer->to,
             'available' => $offer->available,
             'price' => $offer->price,
+            'price_dollar' => $offer->price_dollar,
         ], 'successful', 1);
     }
 
@@ -103,9 +106,10 @@ class OfferController extends Controller
         $validator = Validator::make($request->all(), [
             'icon' => 'nullable|image',
             'from' => 'required|date',
-            'to' => 'required',
+            'to' => 'required|date',
             'available' => 'required|in:active,close',
-            'price' => 'required',
+            'price' => 'required|numeric|min:1',
+            'price_dollar' => 'required|numeric|min:1',
         ]);
 
         if (count($validator->errors()) > 0) {
@@ -125,6 +129,7 @@ class OfferController extends Controller
             'from' => date("Y-m-d", strtotime($request->from)),
             'available' => $request->available,
             'price' => $request->price,
+            'price_dollar' => $request->price_dollar,
             'icon' => $file,
         ]);
 

@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use function included\getDiscount;
+use function included\getPrice;
 use function included\sendResponse;
 
 class InvoiceController extends Controller
@@ -25,8 +27,7 @@ class InvoiceController extends Controller
      */
     public function index()
     {
-//        return Invoice::with(['items','offers'])->find(17);
-        $invoices = Invoice::with(['items','offers'])->where('client_id', Auth::guard('api')->id())->get();
+        $invoices = Invoice::with(['items','offers'])->where('client_id', Auth::guard('api')->id())->orderBy('id','desc')->get();
         if (count($invoices) > 0)
             return sendResponse(InvoiceResource::collection($invoices), 'successful', 1);
         return sendResponse([], 'sorry no data found', 1);
@@ -37,7 +38,10 @@ class InvoiceController extends Controller
      */
     public function show($id)
     {
-        if ($invoice = Invoice::find($id))
+        if ($invoice = Invoice::where([
+            ['id',$id],
+            ['client_id',auth()->id()],
+        ])->first())
             return sendResponse($invoice, 'successful', 1);
         return sendResponse([], 'sorry no data found', 1);
     }
@@ -56,7 +60,7 @@ class InvoiceController extends Controller
         }
         $item = Item::find($request->item_id); //get item details from database
         $offer = Offer::find($request->offer_id);//get offer details from database
-        $price = ($item ? $item->discount * $request->count : $offer->price * $request->count); //calculate the totla price of item or offer
+        $price = ($item ? ($item->discount ?? $item->price) * $request->count : $offer->price * $request->count); //calculate the total price of item or offer
 
         if (!$client = Client::find(Auth::guard('api')->id()))
             return sendResponse([], 'try again', 0);
@@ -73,12 +77,12 @@ class InvoiceController extends Controller
         if ($item) {
             $invoice->items()->attach($request->item_id, [
                 'count' => $request->count,
-                'price' => $item->discount,
+                'price' => getDiscount($item) > 0 ?getDiscount($item) : getPrice($item) ,
             ]);
         } else {
             $invoice->offers()->attach($request->offer_id, [
                 'count' => $request->count,
-                'price' => $offer->price,
+                'price' => getPrice($offer,'offer'),
             ]);
         }
 
@@ -131,7 +135,11 @@ class InvoiceController extends Controller
 
     public function destroy($id)
     {
-        if (!$invoice = Invoice::find($id))
+        if (!$invoice = Invoice::where([
+            ['id',$id],
+            ['client_id',auth()->id()],
+            ['status','pending'],
+            ])->first())
             return sendResponse([], 'this invoice is incorrect', 0);
         if ($invoice->delete())
             return sendResponse([], 'delete successfully', 1);
@@ -150,13 +158,19 @@ class InvoiceController extends Controller
 
         $total = 0;
         $cart = $client->carts;
+//        return CartResource::collection($cart);
         if (!count($cart) > 0)
             return sendResponse([], 'no data found', 0);
         foreach ($cart as $item) {
             if ($item->offer_id) {
-                $total += $item->offer->price * $item->count;
-            } else
-                $total += $item->item->discount * $item->count;
+                $price = getPrice($item->offer,'offer');
+                $total += ($price * $item->count);
+
+            }else {
+                $price = getPrice($item->item);
+                $discount = getDiscount($item->item);
+                $total += ($discount > 0 ? $discount : $price) * $item->count;
+            }
         }
 
         DB::beginTransaction();
@@ -164,20 +178,24 @@ class InvoiceController extends Controller
         try {
             $invoice = $client->invoices()->create([
                 'price' => $total,
+                'is_dollar' => request()->ipinfo->country == "EG" ?0:1,
                 'payment_type' => $request->payment_type,
                 'address_id' => $request->address_id,
             ]);
 
             foreach ($cart as $item) {
                 if ($item->offer_id) {
+                    $price = getPrice($item->offer,'offer');
                     $invoice->offers()->attach($item->offer_id, [
                         'count' => $item->count,
-                        'price' => $item->offer->price,
+                        'price' => $price,
                     ]);
-                } else {
+                } elseif ($item->item_id) {
+                    $price = getPrice($item->item);
+                    $discount = getDiscount($item->item);
                     $invoice->items()->attach($item->item_id, [
                         'count' => $item->count,
-                        'price' => $item->item->discount,
+                        'price' => $discount > 0 ? $discount : $price,
                     ]);
                 }
             }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained('clients');
             $table->foreignId('address_id')->constrained('addresses');
             $table->double('price',10,2)->nullable();
+            $table->double('delivery_price',10,2)->nullable();
             $table->enum('payment_type',['cash','visa'])->nullable();
             $table->enum('status',['pending','underPrepare','onTheWay','delivery'])->default('padding');
             $table->integer('payment_code')->nullable();

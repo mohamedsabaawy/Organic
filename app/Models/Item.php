@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Item extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+
+    //, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -18,7 +20,9 @@ class Item extends Model
         'icon',
         'available',
         'price',
+        'price_dollar',
         'discount',
+        'discount_dollar',
         'category_id',
         'manual',
         'manual_en',
@@ -36,11 +40,27 @@ class Item extends Model
         return $this->hasMany(Photo::class);
     }
 
-    public function favorites(){
-        return $this->belongsToMany(Client::class,'favorites');
+    public function favorites()
+    {
+        return $this->belongsToMany(Client::class, 'favorites');
     }
 
-    public function invoices(){
+    public function invoices()
+    {
         return $this->belongsToMany(Invoice::class);
     }
+
+//    public function getPriceAttribute()
+//    {
+//        if (request()->ipinfo->country == "EG")
+//            return $this->price;
+//        return $this->price_dollar;
+//    }
+//
+//    public function getDiscountAttribute()
+//    {
+//        if (request()->ipinfo->country == "EG")
+//            return $this->discount;
+//        return $this->discount_dollar;
+//    }
 }

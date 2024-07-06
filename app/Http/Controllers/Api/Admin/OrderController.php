@@ -24,7 +24,7 @@ class OrderController extends Controller
             $invoices = $invoices->where('status', $request->status);
         }
 
-        $invoices = $invoices->get();
+        $invoices = $invoices->orderBy('id','desc')->get();
 
         return sendResponse(InvoiceResource::collection($invoices),'successful',1);
     }
@@ -32,7 +32,7 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request ,$id)
     {
         //
     }
@@ -46,11 +46,22 @@ class OrderController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * add delivery price to an invoice.
      */
-    public function edit(string $id)
+    public function deliveryPrice(Request $request,string $id)
     {
-
+//        return $request->ipinfo->ip;
+        $validation = Validator::make($request->all(),[
+            'delivery_price' => 'required|numeric',
+        ]);
+        if (count($validation->errors()) > 0)
+            return sendResponse($validation->errors(),'validation error',0);
+        if (!$invoice = Invoice::find($id))
+            return sendResponse([],'no data found',0);
+        $invoice->update([
+            'delivery_price'=>$request->delivery_price,
+        ]);
+        return sendResponse([],'successful',1);
     }
 
     /**
@@ -58,50 +69,13 @@ class OrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //'padding','underPrepare','onTheWay','delivery'
-//        $invoice = Invoice::find($id);
-//        switch ($invoice->status){
-//            case 'padding':
-//            {
-//                $invoice->update([
-//                    'status' => "underPrepare"
-//                ]);
-//                $invoice->invoiceStatuses()->create([
-//                    'status' => 'underPrepare' //'padding','underPrepare','onTheWay','delivery'
-//                ]);
-//                break;
-//            }
-//            case 'underPrepare':
-//            {
-//                $invoice->update([
-//                    'status' => "onTheWay"
-//                ]);
-//                $invoice->invoiceStatuses()->create([
-//                    'status' => 'onTheWay' //'padding','underPrepare','onTheWay','delivery'
-//                ]);
-//                break;
-//            }
-//            case 'onTheWay':
-//            {
-//                $invoice->update([
-//                    'status' => "delivery"
-//                ]);
-//                $invoice->invoiceStatuses()->create([
-//                    'status' => 'delivery' //'padding','underPrepare','onTheWay','delivery'
-//                ]);
-//                break;
-//            }
-//            default:
-//                break;
-//        }
-
         if (!$invoice = Invoice::find($id))
             return sendResponse([],'not found',0);
         switch ($invoice->status){
             case 'pending'://pending
             {
                 $invoice->update([
-                    'status' => "underPrepare"
+                    'status' => "underPrepare",
                 ]);
                 $invoice->invoiceStatuses()->create([
                     'status' => 'underPrepare' //'pending','underPrepare','onTheWay','delivery'
@@ -180,7 +154,16 @@ class OrderController extends Controller
         //
     }
 
-    public function deleteStatus(){
+    public function canceled($id){
+
+        if(!$invoice = Invoice::find($id)){
+            return sendResponse([],'no data found',0);
+        }
+        $invoice->update([
+            'is_canceled' => 1 //$invoice->is_canceled ==0 ? 1:0,
+        ]);
+
+        return sendResponse(InvoiceResource::make($invoice),'success',1);
 
     }
 }

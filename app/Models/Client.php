@@ -13,7 +13,7 @@ use Tymon\JWTAuth\Contracts\Providers\JWT;
 
 class Client extends Authenticatable implements JWTSubject
 {
-    use  HasApiTokens, HasFactory, Notifiable,SoftDeletes;
+    use  HasApiTokens, HasFactory, Notifiable;//,SoftDeletes;
 
     protected $fillable =[
         'name','email','phone','password','lang','role'

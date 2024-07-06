@@ -9,7 +9,7 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['price','payment_type','status','payment_code','amount','address_id'];
+    protected $fillable = ['price','payment_type','status','payment_code','amount','address_id','delivery_price','is_dollar','is_canceled'];
 
     public function items(){
         return $this->belongsToMany(Item::class)->withPivot('count','price');

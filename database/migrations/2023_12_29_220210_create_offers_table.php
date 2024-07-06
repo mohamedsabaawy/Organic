@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('to');
             $table->enum('available',['active','close'])->default('active');
             $table->double('price',10,2);
+            $table->double('price_dollar',10,2);
             $table->timestamps();
             $table->softDeletes();
         });

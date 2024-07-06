@@ -20,6 +20,7 @@ class ClientResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'role' => $this->role,
+            'is_dollar' => request()->ipinfo->country == "EG" ?0:1,
             'created_at'=>date("Y-m-d",strtotime($this->created_at)),
             'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
             'addresses'=>AddressResource::collection($this->addresses),

@@ -23,7 +23,9 @@ return new class extends Migration
             $table->date('production_date');
             $table->enum('available',['active','nonActive'])->default('active');
             $table->double('price',10,2);
-            $table->double('discount',10,2);
+            $table->double('discount',10,2)->default(0);
+            $table->double('price_dollar',10,2);
+            $table->double('discount_dollar',10,2)->default(0);
             $table->boolean('special')->nullable();
             $table->foreignId('category_id')->constrained()
                 ->onUpdate('cascade')

@@ -14,7 +14,6 @@ class InvoiceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-//        return $this->items;
         $items = [];
         if (count($this->items) > 0){
             foreach ($this->items as $item){
@@ -45,10 +44,15 @@ class InvoiceResource extends JsonResource
         return [
             'id' => $this->id,
             'price' => $this->price,
+            'is_dollar' => $this->is_dollar,
+            'delivery_price' => $this->delivery_price,
+            'total'=>$this->delivery_price+$this->price,
             'payment_type' => $this->payment_type,
             'payment_code' => $this->payment_code,
             'payed_amount' => $this->amount,
             'status' => $this->status,
+            'created_at'=>date("Y-m-d",strtotime($this->created_at)),
+            'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
             'items'=>$items,
             'client'=>[
                 'id' => $this->client->id,
@@ -60,10 +64,8 @@ class InvoiceResource extends JsonResource
                 'updated_at'=>date("Y-m-d",strtotime($this->client->updated_at)),
             ],
             'invoice_status'=>InvoiceStatusResource::collection($this->invoiceStatuses),
+            'is_canceled'=>$this->is_canceled,
             'address'=>AddressResource::make($this->address),
-            'created_at'=>date("Y-m-d",strtotime($this->created_at)),
-            'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
-
         ];
     }
 }

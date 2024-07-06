@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use function included\getDiscount;
+use function included\getPrice;
 use function included\sendResponse;
 
 class CartController extends Controller
@@ -22,17 +24,22 @@ class CartController extends Controller
     public function index()
     {
         $total = 0;
-        $cart = CartResource::collection(Cart::with(['item', 'offer'])->where('client_id', Auth::guard('api')->id())->get());
-        if (!count($cart)>0)
-            return sendResponse([],'no data found',0);
-        foreach ($cart as $item) {
-            if ($item->offer_id) {
-                $total += $item->offer->price * $item->count;
-            } else
-                $total += $item->item->price * $item->count;
+        $carts = Cart::with(['item', 'offer'])->where('client_id', Auth::guard('api')->id())->get();
+        if (count($carts) == 0)
+            return sendResponse([], 'no data found', 0);
+        foreach ($carts as $item) {
+            if ($item->offer_id <> null) {
+                $price = getPrice($item->offer, 'offer');
+                $total += $price * $item->count;
+            }
+            if ($item->item_id <> null) {
+                $price = getPrice($item->item);
+                $discount = getDiscount($item->item);
+                $total += ($discount > 0 ? $discount : $price) * $item->count;
+            }
         }
         return response()->json([
-            "items" => CartResource::collection($cart),//favorites
+            "items" => CartResource::collection($carts),//favorites
             "total_price" => $total
         ]);
     }
@@ -51,13 +58,12 @@ class CartController extends Controller
             return sendResponse($validator->errors(), 'validation error', 0);
 
 
+        $cart = Cart::where('client_id', '=', Auth::guard('api')->id())->get();
 
-        $cart = Cart::where('client_id','=', Auth::guard('api')->id())->get();
-
-        if ($request->item_id & count($cart->where('item_id',$request->item_id))>0)
-            return sendResponse([], 'you try to add same item to the cart',0);
-        if ($request->offer_id & count($cart->where('offer_id',$request->offer_id))>0)
-            return sendResponse([], 'you try to add same offer to the cart',0);
+        if ($request->item_id & count($cart->where('item_id', $request->item_id)) > 0)
+            return sendResponse([], 'you try to add same item to the cart', 0);
+        if ($request->offer_id & count($cart->where('offer_id', $request->offer_id)) > 0)
+            return sendResponse([], 'you try to add same offer to the cart', 0);
 
         $cart = Cart::create([
             'client_id' => Auth::guard('api')->id(),

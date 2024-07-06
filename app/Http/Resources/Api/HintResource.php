@@ -16,9 +16,10 @@ class HintResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'content'=>app()->getLocale() == "ar" ? $this->content :$this->content_en,
-            'author'=>app()->getLocale() == "ar" ? $this->author :$this->author_en,
-            'author_job'=>app()->getLocale() == "ar" ? $this->author_job :$this->author_job_en,
+//            'content'=>app()->getLocale() == "ar" ? $this->content :$this->content_en,
+//            'author'=>app()->getLocale() == "ar" ? $this->author :$this->author_en,
+//            'author_job'=>app()->getLocale() == "ar" ? $this->author_job :$this->author_job_en,
+            'photo'=>$this->photo ? asset('photo/'.$this->photo) : null,
             'created_at'=>date("Y-m-d",strtotime($this->created_at)),
             'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
         ];

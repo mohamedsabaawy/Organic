@@ -48,9 +48,9 @@ class HintController extends Controller
      */
     public function show(string $id)
     {
-        if (!$post = Hint::find($id))
+        if (!$hint = Hint::find($id))
             return sendResponse([], 'sorry no data found', 1);
-        return sendResponse(HintResource::make($post), 'successful', 1);
+        return sendResponse(HintResource::make($hint), 'successful', 1);
     }
 
     public function store(Request $request)
@@ -60,52 +60,65 @@ class HintController extends Controller
             return sendResponse($this->Valid($request)->errors(), 'validation error', 0);
         }
 
-        $post = Hint::create([
+        $hint = Hint::create([
             'content' => $request->content,
             'content_en' => $request->content_en,
             'author' => $request->author,
             'author_en' => $request->author_en,
             'author_job' => $request->author_job,
             'author_job_en' => $request->author_job_en,
+            'photo' => $request->photo->store('hints', 'public'),
         ]);
 
-        return sendResponse(HintResource::make($post), 'successful', 1);
+        return sendResponse(HintResource::make($hint), 'successful', 1);
     }
 
     public function edit($id)
     {
-        if (!$post = Hint::find($id))
+        if (!$hint = Hint::find($id))
             return sendResponse([], 'sorry no data found', 1);
         return sendResponse([
-            'id' => $post->id,
-            'content' => $post->content,
-            'content_en' => $post->content_en,
-            'author' => $post->author,
-            'author_en' => $post->author_en,
-            'author_job' => $post->author_job,
-            'author_job_en' => $post->author_job_en,
+            'id' => $hint->id,
+//            'content' => $hint->content,
+//            'content_en' => $hint->content_en,
+//            'author' => $hint->author,
+//            'author_en' => $hint->author_en,
+//            'author_job' => $hint->author_job,
+//            'author_job_en' => $hint->author_job_en,
+            'photo' => $hint->photo,
         ], 'successful', 1);
     }
 
     public function update(Request $request, string $id)
     {
-        if (!$post = Hint::find($id))
+        if (!$hint = Hint::find($id))
             return sendResponse([], 'not found', 0);
 
-        if (count($this->Valid($request)->errors()) > 0) {
+        if (count($this->Valid($request,"nullable")->errors()) > 0) {
             return sendResponse($this->Valid($request)->errors(), 'validation error', 0);
         }
 
-        $post->update([
+
+        $file = $hint->photo;//تخزين المسار الحالي للصورة
+//        التاكد من وجود صورة
+        if ($request->hasFile('photo')) {
+            Storage::disk('public')->delete($hint->photo ?? "no");
+            $file = $request->photo->store('hints', 'public'); //تسجيل الصورة الجديدة
+        }
+
+//        dd($file);
+
+        $hint->update([
             'content' => $request->content,
             'content_en' => $request->content_en,
             'author' => $request->author,
             'author_en' => $request->author_en,
             'author_job' => $request->author_job,
             'author_job_en' => $request->author_job_en,
+            'photo' => $file,
         ]);
 
-        return sendResponse(HintResource::make($post), 'successful', 1);
+        return sendResponse(HintResource::make($hint), 'successful', 1);
     }
 
     /**
@@ -113,21 +126,22 @@ class HintController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!$post = Hint::find($id))
+        if (!$hint = Hint::find($id))
             return sendResponse([], 'sorry no data found', 1);
-        Storage::disk('public')->delete($post->photo ?? "ddddsdfadsf");
-        $post->delete();
+        Storage::disk('public')->delete($hint->photo ?? "no");
+        $hint->delete();
         return sendResponse([], 'successful', 1);
     }
 
-    private function Valid($request){
+    private function Valid($request,$photo='required'){
         return  Validator::make($request->all(), [
-            'content' => "required",
-            'content_en' => "required",
-            'author' => "required",
-            'author_en' => "required",
-            'author_job' => "required",
-            'author_job_en' => "required",
+//            'content' => "required",
+//            'content_en' => "required",
+//            'author' => "required",
+//            'author_en' => "required",
+//            'author_job' => "required",
+//            'author_job_en' => "required",
+            'photo' => "required|image",
         ]);
     }
 }

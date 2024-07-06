@@ -57,13 +57,13 @@ class PostController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'title' => "required",
-            'title_en' => "required",
-            'content' => "required",
-            'content_en' => "required",
+           // 'title' => "required",
+            //'title_en' => "required",
+//            'content' => "required",
+//            'content_en' => "required",
             'photo' => "required|image",
-            'author' => "required",
-            'author_en' => "required",
+            //'author' => "required",
+            //'author_en' => "required",
         ]);
 
         if (count($validator->errors()) > 0) {
@@ -89,13 +89,13 @@ class PostController extends Controller
             return sendResponse([], 'sorry no data found', 1);
         return sendResponse([
             'id' => $post->id,
-            'title' => $post->title,
-            'title_en' => $post->title_en,
-            'content' => $post->content,
-            'content_en' => $post->content_en,
+            //'title' => $post->title,
+           // 'title_en' => $post->title_en,
+//            'content' => $post->content,
+//            'content_en' => $post->content_en,
             'photo' => asset('photo/' . $post->photo),
-            'author' => $post->author,
-            'author_en' => $post->author,
+            //'author' => $post->author,
+            //'author_en' => $post->author,
         ], 'successful', 1);
     }
 
@@ -105,13 +105,13 @@ class PostController extends Controller
             return sendResponse([], 'not found', 0);
 
         $validator = Validator::make($request->all(), [
-            'title' => "required",
-            'title_en' => "required",
-            'content' => "required",
-            'content_en' => "required",
+           // 'title' => "required",
+            //'title_en' => "required",
+//            'content' => "required",
+//            'content_en' => "required",
             'photo' => "nullable|image",
-            'author' => "required",
-            'author_en' => "required",
+            //'author' => "required",
+           // 'author_en' => "required",
         ]);
 
         if (count($validator->errors()) > 0) {
@@ -122,7 +122,7 @@ class PostController extends Controller
         $file = $post->photo;//تخزين المسار الحالي للصورة
 //        التاكد من وجود صورة
         if ($request->hasFile('photo')) {
-            Storage::disk('public')->delete($item->photo ?? "d sdfs");
+            Storage::disk('public')->delete($post->photo);
             $file = $request->photo->store('posts', 'public'); //تسجيل الصورة الجديدة
         }
 
@@ -146,7 +146,7 @@ class PostController extends Controller
     {
         if (!$post = Post::find($id))
             return sendResponse([], 'sorry no data found', 1);
-        Storage::disk('public')->delete($post->photo ?? "ddddsdfadsf");
+        Storage::disk('public')->delete($post->photo);
         $post->delete();
         return sendResponse([], 'successful', 1);
     }

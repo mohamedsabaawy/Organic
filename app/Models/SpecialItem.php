@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SpecialItem extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory;//,SoftDeletes;
 
     protected $fillable = ['item_id','photo'];
 }

@@ -17,6 +17,7 @@ class Offer extends Model
         'to',
         'available',
         'price',
+        'price_dollar',
     ];
 
 

@@ -32,9 +32,14 @@ class ItemController extends Controller
      */
     public function index()
     {
-        $items = Item::with('category')->get();
+//        return request()->ipinfo->country;
+        $items = Item::with('category')->where('available', 'active')->get();
         if (request()->get('special') == 1) //get special item
             $items = Item::with('category')->where('special', 1)->get();
+        if (request()->get('available') == ('active' or 'nonActive')) //get active item or nonActive item
+            $items = Item::with('category')->where('available', request()->get('available'))->get();
+        if (request()->get('available') == 'all') //get all item
+            $items = Item::with('category')->get();
 
         if (count($items) > 0)
             return sendResponse(ItemResource::collection($items), 'all of items', 1);
@@ -65,8 +70,10 @@ class ItemController extends Controller
             'manual_en' => 'required',
             'production_date' => 'required',
             'available' => 'required|in:"active","nonActive"',
-            'price' => 'required',
-            'discount' => 'required',
+            'price' => 'required|numeric|min:1',
+            'price_dollar' => 'nullable|numeric',
+            'discount' => 'nullable|numeric',
+            'discount_dollar' => 'nullable|numeric',
             'special' => 'nullable|in:0,1',
             'category_id' => ['required', Rule::in($categories)],
             'photos.*' => 'required|image',
@@ -88,7 +95,9 @@ class ItemController extends Controller
             'production_date' => date("Y-m-d", strtotime($request->production_date)),
             'available' => $request->available,
             'price' => $request->price,
-            'discount' => $request->discount,
+            'price_dollar' => $request->price_dollar,
+            'discount' => $request->discount ?? 0,
+            'discount_dollar' => $request->discount_dollar ?? 0,
             'category_id' => $request->category_id,
             'special' => $request->special,
         ]);
@@ -119,7 +128,7 @@ class ItemController extends Controller
      */
     public function edit(string $id)
     {
-        if (!$item = Item::with(['category','photos'])->find($id)) {
+        if (!$item = Item::with(['category', 'photos'])->find($id)) {
             return sendResponse([], 'not found', 0);
         }
 
@@ -132,8 +141,10 @@ class ItemController extends Controller
             'manual' => $item->manual,
             'manual_en' => $item->manual_en,
             'price' => $item->price,
+            'price_dollar' => $item->price_dollar,
             'discount' => $item->discount,
-            'percent' => (($item->price - $item->discount) / $item->price) * 100 . "%",
+            'discount_dollar' => $item->discount_dollar,
+            'percent' => number_format((($item->price - $item->discount) / $item->price) * 100, 1) . "%",
             'icon' => asset('photo/' . $item->icon),
             'available' => $item->available,
             'production_date' => $item->production_date,
@@ -141,10 +152,10 @@ class ItemController extends Controller
             'created_at' => date("Y-m-d", strtotime($item->created_at)),
             'updated_at' => date("Y-m-d", strtotime($item->updated_at)),
             'category' => [
-                'id'=>$item->category->id,
-                'name'=>$item->category->name,
+                'id' => $item->category->id,
+                'name' => $item->category->name,
             ],
-            'photos'=>PhotoResource::collection($item->photos),
+            'photos' => PhotoResource::collection($item->photos),
         ], 'successfully', 1);
 
     }
@@ -168,8 +179,10 @@ class ItemController extends Controller
             'manual_en' => 'required',
             'production_date' => 'required',
             'available' => 'required|in:"active","nonActive"',
-            'price' => 'required',
-            'discount' => 'required',
+            'price' => 'required|numeric|min:1',
+            'price_dollar' => 'nullable|numeric',
+            'discount' => 'nullable|numeric',
+            'discount_dollar' => 'nullable|numeric',
             'special' => 'nullable|in:0,1',
             'category_id' => ['required', Rule::in($categories)],
         ]);
@@ -196,7 +209,9 @@ class ItemController extends Controller
             'production_date' => date("Y-m-d", strtotime($request->production_date)),
             'available' => $request->available,
             'price' => $request->price,
-            'discount' => $request->discount,
+            'price_dollar' => $request->price_dollar,
+            'discount' => $request->discount ?? 0,
+            'discount_dollar' => $request->discount_dollar ?? 0,
             'category_id' => $request->category_id,
             'special' => $request->special,
         ]);
@@ -210,8 +225,12 @@ class ItemController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!$item = Item::with('photos')->find($id))
+        if (!$item = Item::with(['photos', 'invoices'])->find($id))
             return sendResponse([], 'not found', 0);
+        if (count($item->invoices) > 0) {
+            $item->update(['available' => 'nonActive']);
+            return sendResponse([], 'you can\'t delete this item as it has some orders and it now not active', 0);
+        }
         $item->delete();
         Storage::disk('public')->delete($item->icon);
         DB::table('photos')->where('item_id', $id)->delete();
@@ -261,5 +280,6 @@ class ItemController extends Controller
         ]);
         return sendResponse(ItemResource::make($item), 'successfully', 1);
     }
+
 
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Hint extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory;//,SoftDeletes;
 
     protected $fillable =[
         'content',
@@ -17,5 +17,6 @@ class Hint extends Model
         'author_en',
         'author_job',
         'author_job_en',
+        'photo',
     ];
 }

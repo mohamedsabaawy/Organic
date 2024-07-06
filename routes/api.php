@@ -32,14 +32,14 @@ Route::group(['middleware'=>'auth:api'],function (){
     Route::post('auth/logout',[AuthController::class,'logout']);
     Route::resource('cart',CartController::class);
     Route::post('orders/cart',[InvoiceController::class,'fromCart']);
-    //offer routes //
+    //address routes //
     Route::get('addresses',[AddressController::class,'index']);
     Route::post('addresses',[AddressController::class,'store']);
     Route::post('addresses/{id}',[AddressController::class,'update']);
     Route::get('addresses/{id}/edit',[AddressController::class,'edit']);
     Route::get('addresses/{id}',[AddressController::class,'show']);
     Route::delete('addresses/{id}',[AddressController::class,'destroy']);
-    //offer routes //
+    //address routes //
     Route::resource('favorites',FavoriteController::class);
     Route::resource('orders',InvoiceController::class);
     Route::post('orders/cart',[InvoiceController::class,'fromCart']);
@@ -57,8 +57,10 @@ Route::group(['middleware'=>'auth:api'],function (){
         Route::post('offers/{id}',[OfferController::class,'update']);
 
         Route::get('orders',[OrderController::class,'index']);
+        Route::post('orders/deliveryPrice/{id}',[OrderController::class,'deliveryPrice']);
         Route::post('orders/{id}',[OrderController::class,'update']);
         Route::post('orders/rollback/{id}',[OrderController::class,'rollback']);
+        Route::post('orders/canceled/{id}',[OrderController::class,'canceled']);
     });
 });
 Route::group([],function (){

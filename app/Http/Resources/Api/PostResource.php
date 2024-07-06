@@ -16,10 +16,10 @@ class PostResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'photo'=>asset('photo/'.$this->photo),
-            'title'=>app()->getLocale() == "ar" ? $this->title :$this->title_en,
-            'content'=>app()->getLocale() == "ar" ? $this->content :$this->content_en,
-            'author'=>app()->getLocale() == "ar" ? $this->author :$this->author_en,
+            'photo'=>$this->photo ? asset('photo/'.$this->photo) : null,
+//            'title'=>app()->getLocale() == "ar" ? $this->title :$this->title_en,
+//            'content'=>app()->getLocale() == "ar" ? $this->content :$this->content_en,
+//            'author'=>app()->getLocale() == "ar" ? $this->author :$this->author_en,
             'created_at'=>date("Y-m-d",strtotime($this->created_at)),
             'updated_at'=>date("Y-m-d",strtotime($this->updated_at)),
         ];
